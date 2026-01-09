@@ -90,6 +90,12 @@ def analyze_cmj_force(df, baseline=55, delta=5, soglia_volo=5, durata_min=0.5, m
     Pmax = Fmax * (impulso / massa) / tempo_spinta if tempo_spinta > 0 else 0
     h = (9.81 * tempo_volo**2) / 8
 
+    # Calcolo asimmetria media concentrica
+    df_conc = df.loc[idx_spinta:idx_takeoff].copy()
+    df_conc['asimmetria'] = np.abs(df_conc['pedana_sinistra_cor'] - df_conc['pedana_destra_cor']) / \
+                            (df_conc['pedana_sinistra_cor'] + df_conc['pedana_destra_cor'] + 1e-6) * 100
+    asimmetria_media = df_conc['asimmetria'].mean()
+
     return {
         'tempo_eccentrico': tempo_ecc,
         'tempo_spinta': tempo_spinta,
@@ -98,7 +104,9 @@ def analyze_cmj_force(df, baseline=55, delta=5, soglia_volo=5, durata_min=0.5, m
         'impulso': impulso,
         'Pmax': Pmax,
         'altezza': h,
-        'df': df
+        'df': df,
+        'df_conc': df_conc,
+        'asimmetria_media': asimmetria_media
     }
 
 # ============================
@@ -168,6 +176,7 @@ def run_analysis():
     preview_text.insert("end", f"Pmax (W): {cmj['Pmax']:.0f}\n")
     preview_text.insert("end", f"Altezza salto (m): {cmj['altezza']:.3f}\n")
     preview_text.insert("end", f"Massa soggetto (kg): {cmj['massa']:.1f}\n")
+    preview_text.insert("end", f"Asimmetria media concentrica (%): {cmj['asimmetria_media']:.2f}\n")
 
     update_plots(cmj, soglia_volo_val)
 
@@ -192,9 +201,11 @@ def export_results():
     if not pdf_file or not csv_file: return
 
     df_plot = cmj_global['df']
+    df_conc = cmj_global['df_conc']
 
     # ================= PDF
     with PdfPages(pdf_file) as pdf:
+        # 1) Forza totale e soglia volo
         plt.figure(figsize=(8,5))
         plt.plot(df_plot['time'], df_plot['forza_tot'], label='Forza Totale')
         plt.axhline(soglia_volo_global, color='red', linestyle='--', label='Soglia volo')
@@ -205,6 +216,7 @@ def export_results():
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
 
+        # 2) Forza pedane SX/DX
         plt.figure(figsize=(8,5))
         plt.plot(df_plot['time'], df_plot['pedana_sinistra_cor'], label='SX')
         plt.plot(df_plot['time'], df_plot['pedana_destra_cor'], label='DX')
@@ -215,6 +227,17 @@ def export_results():
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
 
+        # 3) Asimmetria media concentrica
+        plt.figure(figsize=(8,5))
+        plt.plot(df_conc['time_s'], df_conc['asimmetria'], color='purple', label='Asimmetria (%)')
+        plt.xlabel('Tempo (s)')
+        plt.ylabel('Asimmetria (%)')
+        plt.title('Asimmetria Media Concentrica')
+        plt.ylim(0, max(df_conc['asimmetria'].max()*1.1, 10))
+        plt.legend()
+        pdf.savefig(); plt.close()
+
+        # 4) Tabella parametri CMJ
         fig, ax = plt.subplots(figsize=(10,6))
         ax.axis('off')
         ax.set_title('Parametri CMJ', fontsize=18, fontweight='bold')
@@ -226,6 +249,7 @@ def export_results():
             ['Impulso (N·s)', f"{cmj_global['impulso']:.1f}"],
             ['Pmax (W)', f"{cmj_global['Pmax']:.0f}"],
             ['Altezza salto (m)', f"{cmj_global['altezza']:.3f}"],
+            ['Asimmetria media concentrica (%)', f"{cmj_global['asimmetria_media']:.2f}"],
             ['Massa soggetto (kg)', f"{cmj_global['massa']:.1f}"]
         ]
         table = ax.table(cellText=cmj_data, loc='center', cellLoc='center', colWidths=[0.5,0.5])
@@ -237,10 +261,10 @@ def export_results():
     # ================= CSV
     df_csv = pd.DataFrame({
         'Parametro': ['Tempo eccentrico (s)','Tempo spinta (s)','Tempo volo (s)','Fmax (N)',
-                      'Impulso (N·s)','Pmax (W)','Altezza salto (m)','Massa soggetto (kg)'],
+                      'Impulso (N·s)','Pmax (W)','Altezza salto (m)','Massa soggetto (kg)','Asimmetria media concentrica (%)'],
         'Valore': [f"{cmj_global['tempo_eccentrico']:.3f}", f"{cmj_global['tempo_spinta']:.3f}", f"{cmj_global['tempo_volo']:.3f}",
                    f"{cmj_global['Fmax']:.0f}", f"{cmj_global['impulso']:.1f}", f"{cmj_global['Pmax']:.0f}",
-                   f"{cmj_global['altezza']:.3f}", f"{cmj_global['massa']:.1f}"]
+                   f"{cmj_global['altezza']:.3f}", f"{cmj_global['massa']:.1f}", f"{cmj_global['asimmetria_media']:.2f}"]
     })
     df_csv.to_csv(csv_file, index=False)
     print(f"Report PDF generato: {pdf_file}")
@@ -271,7 +295,7 @@ massa_entry = Entry(root); massa_entry.insert(0,"66"); massa_entry.grid(row=4, c
 Button(root, text="Seleziona file e calcola", command=run_analysis).grid(row=5, column=0, pady=5)
 Button(root, text="Esporta PDF/CSV", command=export_results).grid(row=5, column=1, pady=5)
 
-preview_text = Text(root, height=10, width=50)
+preview_text = Text(root, height=12, width=50)
 preview_text.grid(row=6, column=0, columnspan=2, pady=5)
 
 plot_frame = Frame(root)
