@@ -341,13 +341,17 @@ def export_results():
         ax.axis('off')
         ax.set_title('Parametri CMJ', fontsize=18, fontweight='bold')
         cmj_data = [
-            ['Fmax (N)', f"{cmj_global['Fmax']:.0f}"],
-            ['t eccentrica (s)', f"{t_ecc:.3f}" if t_ecc is not None else "-"],
-            ['t concentrica (s)', f"{t_conc:.3f}" if t_conc is not None else "-"],
-            ['Tempo di volo (s)', f"{t_volo:.3f}" if t_volo is not None else "-"],
-            ['Bilanciamento medio DX (%)', f"{bil_mean:.1f}" if bil_mean is not None else "-"],
-            ['Massa soggetto (kg)', f"{massa_global:.1f}"]
+        ['Fmax (N)', f"{cmj_global['Fmax']:.0f}"],
+        ['t concentrica (s)', f"{t_conc:.3f}" if t_conc is not None else "-"],
+        ['Tempo di volo (s)', f"{t_volo:.3f}" if t_volo is not None else "-"],
+        ['Bilanciamento medio DX (%)', f"{bil_mean:.1f}" if bil_mean is not None else "-"],
+        ['Massa soggetto (kg)', f"{massa_global:.1f}"]
         ]
+
+        # Aggiungi t eccentrica SOLO se esiste
+        if t_ecc is not None:
+            cmj_data.insert(1, ['t eccentrica (s)', f"{t_ecc:.3f}"])
+
         table = ax.table(cellText=cmj_data, loc='center', cellLoc='center', colWidths=[0.5,0.5])
         table.auto_set_font_size(False)
         table.set_fontsize(14)
