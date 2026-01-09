@@ -272,6 +272,13 @@ def export_results():
     if concentric_start_idx is not None and cmj_global['takeoff_idx'] is not None:
         t_conc = df['time_s'].iloc[cmj_global['takeoff_idx']] - df['time_s'].iloc[concentric_start_idx]
         pot_media, pot_max = compute_concentric_power(df, concentric_start_idx, cmj_global['takeoff_idx'], massa_global)
+     # ============================
+    # BILANCIAMENTO CONCENTRICO
+    # ============================
+    df_conc = df.iloc[concentric_start_idx:cmj_global['takeoff_idx']+1].copy()
+    forza_tot_lr = df_conc['pedana_sinistra_cor'] + df_conc['pedana_destra_cor']
+    bil_conc = 100 * df_conc['pedana_destra_cor'] / forza_tot_lr.replace(0, np.nan)
+    bil_mean = bil_conc.mean()
 
     pdf_file = filedialog.asksaveasfilename(defaultextension=".pdf",
                                             filetypes=[("PDF files","*.pdf")],
@@ -314,6 +321,21 @@ def export_results():
         if cmj_global['takeoff_time'] is not None and cmj_global['landing_time'] is not None:
             t_volo = cmj_global['landing_time'] - cmj_global['takeoff_time']
 
+        # Plot bilanciamento concentrico
+        if concentric_start_idx is not None and cmj_global['takeoff_idx'] is not None:
+            plt.figure(figsize=(8,5))
+            t_rel = df_conc['time_s'] - df_conc['time_s'].iloc[0]
+            plt.plot(t_rel, bil_conc, label='Bilanciamento DX (%)')
+            plt.axhline(50, color='black', linestyle='--', linewidth=1)
+            plt.xlabel('Tempo concentrica (s)')
+            plt.ylabel('Bilanciamento (%)')
+            plt.title('Bilanciamento durante fase concentrica')
+            plt.ylim(0,100)
+            plt.legend()
+            plt.grid(alpha=0.3)
+            pdf.savefig()
+            plt.close()
+
         # Tabella
         fig, ax = plt.subplots(figsize=(10,6))
         ax.axis('off')
@@ -323,6 +345,7 @@ def export_results():
             ['t eccentrica (s)', f"{t_ecc:.3f}" if t_ecc is not None else "-"],
             ['t concentrica (s)', f"{t_conc:.3f}" if t_conc is not None else "-"],
             ['Tempo di volo (s)', f"{t_volo:.3f}" if t_volo is not None else "-"],
+            ['Bilanciamento medio DX (%)', f"{bil_mean:.1f}" if bil_mean is not None else "-"],
             ['Massa soggetto (kg)', f"{massa_global:.1f}"]
         ]
         table = ax.table(cellText=cmj_data, loc='center', cellLoc='center', colWidths=[0.5,0.5])
