@@ -272,9 +272,20 @@ def export_results():
     if concentric_start_idx is not None and cmj_global['takeoff_idx'] is not None:
         t_conc = df['time_s'].iloc[cmj_global['takeoff_idx']] - df['time_s'].iloc[concentric_start_idx]
         pot_media, pot_max = compute_concentric_power(df, concentric_start_idx, cmj_global['takeoff_idx'], massa_global)
-     # ============================
+
+    # PARAMETRI DINAMICI CONCENTRICA
+    df_conc = df.iloc[concentric_start_idx:cmj_global['takeoff_idx']+1].copy()
+    F_conc = df_conc['forza_tot'].values
+    t_conc_vec = df_conc['time_s'].values  # già in secondi
+    F_mean_conc = np.mean(F_conc)
+    # Impulso reale
+    J_conc = np.trapz(F_conc, t_conc_vec)
+    # Delta v al take-off
+    delta_v = J_conc / massa_global
+    # Impulso normalizzato
+    J_norm = J_conc / (massa_global * g)
+
     # BILANCIAMENTO CONCENTRICO
-    # ============================
     df_conc = df.iloc[concentric_start_idx:cmj_global['takeoff_idx']+1].copy()
     forza_tot_lr = df_conc['pedana_sinistra_cor'] + df_conc['pedana_destra_cor']
     bil_conc = 100 * df_conc['pedana_destra_cor'] / forza_tot_lr.replace(0, np.nan)
@@ -318,8 +329,10 @@ def export_results():
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
         t_volo = None
+        H_salto = None
         if cmj_global['takeoff_time'] is not None and cmj_global['landing_time'] is not None:
             t_volo = cmj_global['landing_time'] - cmj_global['takeoff_time']
+            H_salto = g * t_volo**2 / 8
 
         # Plot bilanciamento concentrico
         if concentric_start_idx is not None and cmj_global['takeoff_idx'] is not None:
@@ -344,11 +357,15 @@ def export_results():
         ['Fmax (N)', f"{cmj_global['Fmax']:.0f}"],
         ['t concentrica (s)', f"{t_conc:.3f}" if t_conc is not None else "-"],
         ['Tempo di volo (s)', f"{t_volo:.3f}" if t_volo is not None else "-"],
+        ['Altezza salto (cm)', f"{H_salto*100:.1f}" if H_salto is not None else "-"],
         ['Bilanciamento medio DX (%)', f"{bil_mean:.1f}" if bil_mean is not None else "-"],
         ['Massa soggetto (kg)', f"{massa_global:.1f}"]
         ]
-
-        # Aggiungi t eccentrica SOLO se esiste
+        if t_conc is not None:
+            cmj_data.insert(2, ['Forza media concentrica (N)', f"{F_mean_conc:.0f}"])
+            cmj_data.insert(3, ['Impulso concentrico (N·s)', f"{J_conc:.1f}"])
+            cmj_data.insert(4, ['Δv al take-off (m/s)', f"{delta_v:.2f}"])
+            cmj_data.insert(5, ['Impulso / BW (s)', f"{J_norm:.2f}"])
         if t_ecc is not None:
             cmj_data.insert(1, ['t eccentrica (s)', f"{t_ecc:.3f}"])
 
