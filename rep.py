@@ -315,7 +315,7 @@ def export_results():
             plt.axvline(df.iloc[concentric_start_idx]['time'], color='brown', linestyle='--', label='Inizio concentrica')
         plt.xlabel('Tempo (ms)')
         plt.ylabel('Forza (N)')
-        plt.legend()
+        plt.legend(loc='upper left')
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
 
@@ -325,7 +325,7 @@ def export_results():
         plt.plot(df['time'], df['pedana_destra_cor'], label='DX')
         plt.xlabel('Tempo (ms)')
         plt.ylabel('Forza (N)')
-        plt.legend()
+        plt.legend(loc='upper left')
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
         t_volo = None
@@ -344,7 +344,7 @@ def export_results():
             plt.ylabel('Bilanciamento (%)')
             plt.title('Bilanciamento durante fase concentrica')
             plt.ylim(0,100)
-            plt.legend()
+            plt.legend(loc='upper left')
             plt.grid(alpha=0.3)
             pdf.savefig()
             plt.close()
