@@ -310,6 +310,9 @@ def export_results():
         plt.legend()
         plt.ylim(bottom=0)
         pdf.savefig(); plt.close()
+        t_volo = None
+        if cmj_global['takeoff_time'] is not None and cmj_global['landing_time'] is not None:
+            t_volo = cmj_global['landing_time'] - cmj_global['takeoff_time']
 
         # Tabella
         fig, ax = plt.subplots(figsize=(10,6))
@@ -317,9 +320,9 @@ def export_results():
         ax.set_title('Parametri CMJ', fontsize=18, fontweight='bold')
         cmj_data = [
             ['Fmax (N)', f"{cmj_global['Fmax']:.0f}"],
-            ['Tempo picco forza (s)', f"{cmj_global['peak_time']:.3f}"],
             ['t eccentrica (s)', f"{t_ecc:.3f}" if t_ecc is not None else "-"],
             ['t concentrica (s)', f"{t_conc:.3f}" if t_conc is not None else "-"],
+            ['Tempo di volo (s)', f"{t_volo:.3f}" if t_volo is not None else "-"],
             ['Massa soggetto (kg)', f"{massa_global:.1f}"]
         ]
         table = ax.table(cellText=cmj_data, loc='center', cellLoc='center', colWidths=[0.5,0.5])
