@@ -76,8 +76,8 @@ def export_pdf():
         # Solo Altezze
         h_df = df[df['Parametro'].str.contains('Altezza', case=False)]
         x_h = np.arange(len(h_df))
-        ax_h.bar(x_h - 0.17, h_df['Valore_Pre'], 0.35, label='Iniziale (Pre)', color='#2196F3', edgecolor='black')
-        ax_h.bar(x_h + 0.17, h_df['Valore_Post'], 0.35, label='Finale (Post)', color='#F44336', edgecolor='black')
+        ax_h.bar(x_h - 0.17, h_df['Valore_Pre'], 0.35, label='Iniziale (Pre)', color="#30E91F", edgecolor='black')
+        ax_h.bar(x_h + 0.17, h_df['Valore_Post'], 0.35, label='Finale (Post)', color='#CE44B7', edgecolor='black')
         ax_h.set_xticks(x_h); ax_h.set_xticklabels(h_df['Parametro'])
         ax_h.set_ylabel("Centimetri (cm)"); ax_h.legend(); ax_h.grid(axis='y', alpha=0.3)
         ax_h.set_title("EVOLUZIONE ALTEZZE DI SALTO", fontsize=12, fontweight='bold')
@@ -88,8 +88,8 @@ def export_pdf():
         fig2, ax_i = plt.subplots(figsize=(8.5, 6))
         i_df = df[~df['Parametro'].str.contains('Altezza', case=False)]
         x_i = np.arange(len(i_df))
-        ax_i.bar(x_i - 0.17, i_df['Valore_Pre'], 0.35, label='Pre', color='#90CAF9', alpha=0.7, edgecolor='black')
-        ax_i.bar(x_i + 0.17, i_df['Valore_Post'], 0.35, label='Post', color='#EF9A9A', alpha=0.7, edgecolor='black')
+        ax_i.bar(x_i - 0.17, i_df['Valore_Pre'], 0.35, label='Pre', color="#30E91F", alpha=0.7, edgecolor='black')
+        ax_i.bar(x_i + 0.17, i_df['Valore_Post'], 0.35, label='Post', color="#CE44B7", alpha=0.7, edgecolor='black')
         ax_i.set_xticks(x_i); ax_i.set_xticklabels(i_df['Parametro'], rotation=15)
         ax_i.set_title("INDICI NEUROMUSCOLARI E REATTIVITÀ", fontsize=12, fontweight='bold')
         ax_i.legend(); ax_i.grid(axis='y', alpha=0.3)
@@ -98,7 +98,7 @@ def export_pdf():
 
         # --- PAGINA 3: VARIAZIONE PERCENTUALE (IMPATTO VISIVO) ---
         fig3, ax3 = plt.subplots(figsize=(8.5, 8))
-        colors = ['#4CAF50' if v >= 0 else '#D32F2F' for v in df['Diff %']]
+        colors = ['#4CAF50' if v >= 0 else "#AA1949" for v in df['Diff %']]
         bars = ax3.barh(df['Parametro'], df['Diff %'], color=colors, edgecolor='black', height=0.6)
         
         # Linea centrale sullo 0
